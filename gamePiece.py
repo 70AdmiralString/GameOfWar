@@ -1,6 +1,6 @@
 import numpy as np
 
-directions = np.array([[1,1],[1,0],[1,-1],[0,1],[0,0],[0,-1],[-1,1],[-1,0],[-1,-1]]);
+directions = np.array([[1,1],[1,0],[1,-1],[0,1],[0,0],[0,-1],[-1,1],[-1,0],[-1,-1]]); #Every valid straight line direction as a vector. Plus the zero-vector.
 
 class gamePiece:
     ''' 
@@ -23,7 +23,9 @@ class gamePiece:
         self.threatenedValue = 0;
         self.supportedValue = 0; 
           
-    def movementRange(self):
+    def movementRange(self): 
+        '''A function which returns a list of all possible location coordinates that can be reached by this piece. Does not account for terrain, supply lines, or other pieces. '''
+        
         width = 2 * self.moveRange + 1;
         result = np.zeros([width**2, 2]);
         for i in range(width**2):
