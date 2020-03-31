@@ -27,9 +27,6 @@ class GamePiece:
         self.attackRange = 0;
         self.attackPower = 0;
         self.supportPower = 0;
-        
-        self.threatenedValue = 0;
-        self.supportedValue = 0; 
 
     '''Functions to help with representation of objects'''
 
@@ -268,9 +265,6 @@ class Infantry(GamePiece):
         self.attackRange = 2;
         self.attackPower = 4;
         self.supportPower = 6;
-        
-        self.threatenedValue = 0;
-        self.supportedValue = 0; 
 
         
         
@@ -290,9 +284,6 @@ class Cavalry(GamePiece):
         self.attackRange = 2;
         self.attackPower = 4;
         self.supportPower = 5;
-        
-        self.threatenedValue = 0;
-        self.supportedValue = 0; 
         
     #TODO: Cavalry charges/melee attack power
   
@@ -314,9 +305,6 @@ class Artillery(GamePiece):
         self.attackRange = 3;
         self.attackPower = 5;
         self.supportPower = 8;
-        
-        self.threatenedValue = 0;
-        self.supportedValue = 0; 
      
         
 class FootArtillery(Artillery):
@@ -363,10 +351,7 @@ class Relay(GamePiece):
         
         self.attackRange = 2;
         self.attackPower = 0;
-        self.supportPower = 1;
-        
-        self.threatenedValue = 0;
-        self.supportedValue = 0;         
+        self.supportPower = 1;       
         
     #TODO: Communication Line Relay Mechanism
     
@@ -408,7 +393,7 @@ a = GamePiece(10,10)
 b = GamePiece(9,8)
 b.moveRange = 4
 c =  GamePiece.quick_init("{'location': (9, 7), 'pieceType': 'Fake Piece', 'moveRange': 9}")
-d = GamePiece.quick_init({'location': (-5, 0), 'pieceType': '100',  'threatenedValue':1})
+d = GamePiece.quick_init({'location': (-5, 0), 'pieceType': '100'})
 e = GamePiece.quick_init({'location': (30, 0), 'pieceType': 'C_H',  'extraValue':"easter egg"})
 f = Infantry.quick_init("{'location': (9, 7), 'pieceType': 'I', 'moveRange': -9}")
        
