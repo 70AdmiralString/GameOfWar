@@ -46,6 +46,7 @@ class GamePiece:
         "Only returns the attributes that different from the default ones. If you want to see all values, then use self.__dict__"
 
         #Decide which class to compare our piece to
+        #Can this be done in fewer lines of code?
         pieceType = self.pieceType
         if (pieceType == 'I'):
             test_piece = Infantry(0,0)
@@ -81,10 +82,14 @@ class GamePiece:
 
     def __str__(self):
         "A user friendly text representation of the instance. Allows the 'print' to work without giving too much information."
-        "Only gives the peiceType and the Location information"
+        "Only gives essential information"
 
-        dic = {'pieceType': self.pieceType, 'location':tuple(self.location)}
-        return str(dic)
+        essential_info = ['pieceType', 'location'] # A list of all the essential bits of information that we want to appear when printing
+
+        dic = {}
+        for i in range(0,len(essential_info)):
+            dic[essential_info[i]] = getattr(self, essential_info[i])
+        return "Game Piece " + str( dic)
 
     def quick_init(dicORstr):
         "Takes in the output of __repr__ either as a string or as a dictionary. Returns a new member of the class with this information"
