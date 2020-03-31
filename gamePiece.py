@@ -16,9 +16,20 @@ class GamePiece:
     '''
 
     def __init__(self, xLocation, yLocation):
+        # Attributes which track the state of the piece.
         self.location = int32Array([xLocation,yLocation])
-        self.inCommunication = True;
         
+        self.inCommunication = True;
+        self.hasMoved = False;
+        self.canMove = True;
+            #occupiesSquare is True if a piece fills the square it is being placed in, so 
+            #   that no other pieces may occupy it.
+        self.occupiesSquare = True;
+            #canUseForts is True if a piece is capable of receiving a defensive bonus 
+            #   from terrain and false otherwise.
+        self.canUseForts = True;
+        
+        # Attributes of the piece based on the type of piece.
         self.pieceType = '';
         self.icon = [];
         
@@ -245,8 +256,44 @@ class GamePiece:
         
         return result
         
-    def move(self, newXLoc, newYLoc):
-        self.location = int32Array([newXLoc,newYLoc])
+    def updateLocation(self, newLocation):
+        '''
+            Updates the location of the piece while changing no other attributes.
+            
+                newLocation is an integer array consisting of two elements, the x and y positions of the new location.
+        '''
+        self.location = newLocation;
+        
+    def move(self, newLocation, impassableSquares):
+        '''
+            Updates the location of the piece to the location specified, if newLocation is a square within
+                the movement range of the piece not its current location and the piece has not yet moved.  
+                Updates the hasMoved attribute to True;
+                
+            newLocation is an integer array consisting of two elements, the x and y positions of the new location.
+            impassableSquares : Integer array of all tile locations which may not be traversed by a piece.
+        '''
+        options = self.movementRange(impassableSquares)
+        
+        nearest = min(np.sum((options - newLocation)**2, axis = 1));
+        distanceFromSelf = np.sum((self.location - newLocation)**2);
+        if self.canMove:
+            if self.hasMoved:
+                print("This piece has already moved, movement not carried out.")
+            else:
+                if nearest == 0 and distanceFromSelf != 0:
+                    self.updateLocation(newLocation);
+                    self.hasMoved = True;
+                else:
+                    print("Not a valid move, movement not carried out.")
+        else:
+            print("This piece is not movable, movement not carried out.")
+                
+    def refreshMovement(self):
+        '''
+            Resets the value of self.hasMoved to False, so that pieces may move again.
+        '''
+        self.hasMoved = False;
         
 
 class Infantry(GamePiece):
@@ -275,6 +322,7 @@ class Cavalry(GamePiece):
     '''
     def __init__(self, xLocation, yLocation):
         super().__init__(xLocation, yLocation)
+        self.canUseForts = False;
         
         self.pieceType = 'H';
         self.icon = [];
@@ -283,10 +331,76 @@ class Cavalry(GamePiece):
         
         self.attackRange = 2;
         self.attackPower = 4;
+        self.chargePower = 7;
         self.supportPower = 5;
         
+    def _cavalryLines(self, friendlyCavalryPositions):
+        '''
+            Outputs a list of 8 integer arrays, corresponding to each direction emanating outwards from self.location.
+                Each array consists of points starting at self.location and moving in a specific direction one unit at a time,
+                such that each listed point corresponds to a square containing a cavalry.
+                Every array contains self.location, so has a minimum length of 1.
+                The 8 integer arrays are ordered (using cardinal directions as a reference) as follows:
+                    [NW, N, NE, W, E, SW, S, SE]
+                    
+                friendlyCavalryPositions : Integer array of all positions currently occupied by friendly cavalry.
+                This includes the location of this unit itself.
+        '''
+        result = [];
+        for i in range(len(DIRECTIONS)):
+            lineDist = 1;
+            while True:
+                examinedTile = self.location + lineDist * DIRECTIONS[i];
+                
+                cavalryDistances = np.sum((friendlyCavalryPositions - examinedTile)**2, axis = 1);
+                if min(cavalryDistances) != 0:
+                    break;
+                
+                lineDist += 1;
+            currentLine = int32Zeros([lineDist,2]);
+            for j in range(lineDist):
+                currentLine[j] = self.location + j * DIRECTIONS[i];
+            result.append(currentLine);
+        return result;
+    
     #TODO: Cavalry charges/melee attack power
-  
+    def chargeRange(self, impassableSquares, friendlyCavalryPositions):
+        '''
+            Returns an integer array consisting of all points which may be targeted
+                by this unit in a cavalry charge.
+            
+            impassableSquares : Integer array of all positions which may not be traversed by a unit.
+            friendlyCavalryPositions : Integer array of all positions currently occupied by friendly cavalry.
+                This includes the location of this unit itself.
+        '''
+        cavalryLines = self._cavalryLines(friendlyCavalryPositions);
+        lengthList = [len(i) for i in cavalryLines];
+        #   There is one more anomalous situation we wish to remove, that where a line of cavalry
+        #       ends on impassable terrain.  If this is the case, we will simply remove the last entry.
+        if len(impassableSquares) != 0:
+            for i in range(len(DIRECTIONS)):
+                lineEndTile = self.location + lengthList[i] * DIRECTIONS[i];
+                impassableDist = min(np.sum((impassableSquares - lineEndTile)**2, axis = 1));
+                if impassableDist == 0:
+                    lengthList[i] += -1;
+        
+        length = 1 + sum(lengthList);
+        
+        result = int32Zeros([length,2]);
+        result[0] = self.location;
+        
+        index = 0;
+        currentDirIndex = 0;
+        for i in range(1,length):
+            while True:
+                if index >= lengthList[currentDirIndex]:
+                    currentDirIndex += 1;
+                    index = 0;
+                else:
+                    break;
+            result[i] = cavalryLines[currentDirIndex][index] + DIRECTIONS[currentDirIndex];
+            index += 1;            
+        return result;
     
 class Artillery(GamePiece):
     '''
@@ -296,9 +410,6 @@ class Artillery(GamePiece):
     '''
     def __init__(self, xLocation, yLocation):
         super().__init__(xLocation, yLocation)
-        
-        self.pieceType = '';
-        self.icon = [];
         
         self.moveRange = 0;
         
@@ -328,6 +439,7 @@ class SwiftArtillery(Artillery):
     '''
     def __init__(self, xLocation, yLocation):
         super().__init__(xLocation, yLocation)
+        self.canUseForts = False;        
         
         self.pieceType = 'A_H';
         self.icon = [];
@@ -338,14 +450,11 @@ class SwiftArtillery(Artillery):
 class Relay(GamePiece):
     '''
         This class represents a single relay unit on the board.
-        It is further divided into foot relays and swift relays based on speed.
+        It is further divided into foot relays, swift relays, and arsenals based on speed.
         It is represented as a GamePiece with particular specified attributes.
     '''
     def __init__(self, xLocation, yLocation):
         super().__init__(xLocation, yLocation)
-        
-        self.pieceType = '';
-        self.icon = [];
         
         self.moveRange = 0;
         
@@ -353,7 +462,21 @@ class Relay(GamePiece):
         self.attackPower = 0;
         self.supportPower = 1;       
         
-    #TODO: Communication Line Relay Mechanism
+    def communicationRange(self, impassableSquares):
+        '''
+            Returns all squares within communication range of the relay.
+            Returns a list of 8 numpy integer arrays, each consisting of all tiles in a 
+                specific direction from self.location, ordered by distance from that point, 
+                stopping when an obstacle is reached or the maximum distance desired is reached.
+            The 8 integer arrays are ordered (using cardinal directions as a reference) as follows:
+                [NW, N, NE, W, E, SW, S, SE]
+            
+                impassableSquares : Integer array of all tile locations which may not be traversed by a
+                    friendly communication line.  Likely includes impassable terrain and enemy units.
+        '''
+        result = self.straightLinePts(impassableSquares);
+        
+        return result;
     
     
 class FootRelay(Relay):
@@ -377,13 +500,34 @@ class SwiftRelay(Relay):
     '''
     def __init__(self, xLocation, yLocation):
         super().__init__(xLocation, yLocation)
+        self.canUseForts = False;
         
         self.pieceType = 'C_H';
         self.icon = [];
         
         self.moveRange = 2;
         
+
+class Arsenal(Relay):
+    '''
+        Represents one of the arsenals which generate the initial lines of communication.
+        Generally placed at the start of the game and then is unable to move.  
+        Another piece may be stacked on top of it.
+        An enemy unit being stacked on this location will destroy the arsenal.
+    '''
+    def __init__(self, xLocation, yLocation):
+        super().__init__(xLocation, yLocation)
         
+        self.occupiesSquare = False;
+        self.canMove = False;
+        self.canUseForts = False;
+        
+        self.pieceType = 'B';
+        self.icon = [];
+        
+        self.attackRange = 0;
+        self.attackPower = 0;
+        self.supportPower = 0;    
         
         
         
