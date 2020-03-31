@@ -1,12 +1,6 @@
-import numpy as np
+import tupleList
 
-def int32Array(inputList):
-    return np.array(inputList, dtype = np.int32)
-
-def int32Zeros(shapeList):
-    return np.zeros(shapeList, dtype = np.int32)
-
-DIRECTIONS = int32Array([[1,-1],[1,0],[1,1],[0,-1],[0,1],[-1,-1],[-1,0],[-1,1]]); 
+DIRECTIONS = [(1,-1),(1,0),(1,1),(0,-1),(0,1),(-1,-1),(-1,0),(-1,1)]; 
 #Every valid straight line direction as a vector.
 
 class GamePiece:
@@ -17,7 +11,7 @@ class GamePiece:
 
     def __init__(self, xLocation, yLocation):
         # Attributes which track the state of the piece.
-        self.location = int32Array([xLocation,yLocation])
+        self.location = (xLocation,yLocation)
         
         self.inCommunication = True;
         self.hasMoved = False;
@@ -127,70 +121,70 @@ class GamePiece:
                           
     def adjacentSquares(self, center):
         '''
-            Returns an integer array of all tiles adjacent to the specified center.
+            Returns an list of tuples of all tiles adjacent to the specified center.
         '''
-        return (center + DIRECTIONS)
+        return tupleList.tupleListAdd(DIRECTIONS, center)
     
     def _movementRangeCandidates(self): 
         '''
-            Returns an integer array of all possible candidate location coordinates that can be reached by this piece. 
+            Returns an list of tuples of all possible candidate location coordinates that can be reached by this piece. 
             Does not account for terrain, communication lines, or other pieces. 
         '''
         width = 2 * self.moveRange + 1;
-        result = int32Zeros([width**2, 2]);
+        result = [(0,0)] * (width**2);
         for i in range(width**2):
             result[i] = [i//width - self.moveRange, i%width - self.moveRange];
-        return (self.location + result)
+        return tupleList.tupleListAdd(result, self.location)
     
     def movementRange(self, impassableSquares):
         '''
-            Returns an integer array of all possible location coordinates reachable by this piece in one turn.
+            Returns a list of tuples of all possible location coordinates reachable by this piece in one turn.
             
-                impassableSquares : Integer array of all tile locations which may not be traversed by a piece.
+                impassableSquares : list of tuples of all tile locations which may not be traversed by a piece.
         '''
         candidates = self._movementRangeCandidates();
         
         # Removing self.location from the candidate array, as it is automatically included later.
-        locationIndex = np.shape(candidates)[0]//2;
-        candidates = np.delete(candidates, locationIndex, axis = 0);
+        candidates = tupleList.remove(candidates, self.location);
         
         # Removing candidate points which are impassable.
         if impassableSquares != []:
             indices = [];
-            for j in range(np.shape(candidates)[0]):
+            for j in range(len(candidates)):
                 intersection = False;
-                if min(np.sum((impassableSquares - candidates[j])**2, axis = 1)) == 0:
+                if impassableSquares.count(candidates[j]):
                     intersection = True;
                 if not intersection:
                     indices.append(j)
-            candidates = candidates[indices];
+            candidates = [candidates[i] for i in indices];
         
         # Determining which remaining candidate points are reachable in the specified number of moves 
         # by doing 1 move at a time
-        result = int32Array([self.location]);
-        currentLayer = int32Array([self.location]);
+        result = [self.location];
+        currentLayer = [self.location];
         for i in range(self.moveRange):
             goodIndices = [];
             badIndices = [];
-            for j in range(np.shape(candidates)[0]):
-                if min(np.sum((currentLayer - candidates[j])**2, axis = 1)) <= 2:
+            for j in range(len(candidates)):
+                distances = tupleList.distanceSqList(currentLayer, candidates[j]);
+                if min(distances) <= 2:
                     goodIndices.append(j);
                 else:
                     badIndices.append(j);
-            currentLayer = candidates[goodIndices];
-            result = np.concatenate((result,currentLayer),axis = 0);
-            candidates = candidates[badIndices];        
+            currentLayer = [candidates[i] for i in goodIndices];
+            result = result + currentLayer;
+            candidates = [candidates[i] for i in badIndices];   
         return result
     
     def straightLinePts(self, impassableSquares, maxDist = -1):
         '''
-            Returns a list of 8 numpy integer arrays, each consisting of all tiles in a 
+            Returns a list of 8 lists of tuples of integers, each consisting of all tiles in a 
                 specific direction from self.location, ordered by distance from that point, 
                 stopping when an obstacle is reached or the maximum distance desired is reached.
-            The 8 integer arrays are ordered (using cardinal directions as a reference) as follows:
+            The 8 lists of tuples are ordered (using cardinal directions as a reference) as follows:
                 [NW, N, NE, W, E, SW, S, SE]
             
-                impassableSquares : Integer array of all tile locations which may not be traversed by a piece.
+                impassableSquares : Lists of tuples of all tile locations which may not be traversed by a piece.
                 maxDist is an integer representing the maximum distance along which any direction should be travelled.
                     A unit with attack range 2, for example, will only examine points in straight lines 2 units away.
                     If unlimited range (travel indefinitely until an obstacle) is desired, then set
@@ -202,45 +196,43 @@ class GamePiece:
             return [];
         else:
             result = [];
-            for i in range(np.shape(DIRECTIONS)[0]):
+            for i in range(len(DIRECTIONS)):
                 currentDir = DIRECTIONS[i];
                 distanceAllowed = 0;
                 
                 breakCond = True;
                 while breakCond:
                     distanceAllowed += 1;
-                    
                     if impassableSquares != []:
-                        currentTile = self.location + distanceAllowed * currentDir;
-                        nearestImpassableDist = min(np.sum((impassableSquares - currentTile)**2, axis = 1));
-                        if nearestImpassableDist == 0:
+                        currentTile = tupleList.tupleAdd(tupleList.tupleConstMult(currentDir,distanceAllowed), self.location);
+                        if impassableSquares.count(currentTile):
                             breakCond = False;
                     if distanceAllowed > maxDist:
                         breakCond = False;
                 
                 if distanceAllowed == 1:
-                    currentArray = int32Array([]);
+                    currentArray = [];
                 else:
-                    currentArray = int32Zeros([distanceAllowed - 1,2]);
+                    currentArray = [(0,0)] * (distanceAllowed - 1);
                 for j in range(1, distanceAllowed):
-                    currentArray[j-1] = self.location + j * currentDir;
+                    currentArray[j-1] = tupleList.tupleAdd(tupleList.tupleConstMult(currentDir, j), self.location);
                 result.append(currentArray);
                 
             return result;
     
     def attackSupportRange(self, impassableSquares):
         '''
-            A function which returns an integer array of all possible location 
+            A function which returns a list of tuples of all possible location 
             coordinates that can be attacked/supported by this piece.
             
-                impassableSquares : Integer array of all tile locations which may not be traversed by a piece.
+                impassableSquares : List of tuples of all tile locations which may not be traversed by a piece.
         '''
         almostResult = self.straightLinePts(impassableSquares, self.attackRange);
         
         lengthList = [len(i) for i in almostResult];
         length = 1 + sum(lengthList);
         
-        result = int32Zeros([length,2]);
+        result = [(0,0)] * length;
         result[0] = self.location;
         
         currentArrayIndex = 0;
@@ -262,7 +254,8 @@ class GamePiece:
         '''
             Updates the location of the piece while changing no other attributes.
             
-                newLocation is an integer array consisting of two elements, the x and y positions of the new location.
+                newLocation is a list of tuples consisting of two elements, 
+                    the x and y positions of the new location.
         '''
         self.location = newLocation;
         
@@ -272,18 +265,15 @@ class GamePiece:
                 the movement range of the piece not its current location and the piece has not yet moved.  
                 Updates the hasMoved attribute to True;
                 
-            newLocation is an integer array consisting of two elements, the x and y positions of the new location.
-            impassableSquares : Integer array of all tile locations which may not be traversed by a piece.
+            newLocation is a list of tuples consisting of two elements, the x and y positions of the new location.
+            impassableSquares : List of tuples of all tile locations which may not be traversed by a piece.
         '''
         options = self.movementRange(impassableSquares)
-        
-        nearest = min(np.sum((options - newLocation)**2, axis = 1));
-        distanceFromSelf = np.sum((self.location - newLocation)**2);
         if self.canMove:
             if self.hasMoved:
                 print("This piece has already moved, movement not carried out.")
             else:
-                if nearest == 0 and distanceFromSelf != 0:
+                if options.count(newLocation) and (self.location != newLocation):
                     self.updateLocation(newLocation);
                     self.hasMoved = True;
                 else:
@@ -338,40 +328,38 @@ class Cavalry(GamePiece):
         
     def _cavalryLines(self, friendlyCavalryPositions):
         '''
-            Outputs a list of 8 integer arrays, corresponding to each direction emanating outwards from self.location.
-                Each array consists of points starting at self.location and moving in a specific direction one unit at a time,
-                such that each listed point corresponds to a square containing a cavalry.
-                Every array contains self.location, so has a minimum length of 1.
-                The 8 integer arrays are ordered (using cardinal directions as a reference) as follows:
+            Outputs a list of 8 lists of tuples, corresponding to each direction emanating outwards from self.location.
+                Each list of tuples consists of points starting at self.location and moving in a specific direction 
+                one unit at a time, such that each listed point corresponds to a square containing a cavalry.
+                Every list contains self.location, so all have a minimum length of 1.
+                The 8 lists of tuples are ordered (using cardinal directions as a reference) as follows:
                     [NW, N, NE, W, E, SW, S, SE]
                     
-                friendlyCavalryPositions : Integer array of all positions currently occupied by friendly cavalry.
+                friendlyCavalryPositions : List of tuples of all positions currently occupied by friendly cavalry.
                 This includes the location of this unit itself.
         '''
         result = [];
         for i in range(len(DIRECTIONS)):
             lineDist = 1;
             while True:
-                examinedTile = self.location + lineDist * DIRECTIONS[i];
-                
-                cavalryDistances = np.sum((friendlyCavalryPositions - examinedTile)**2, axis = 1);
-                if min(cavalryDistances) != 0:
-                    break;
-                
+                examinedTile = tupleList.tupleAdd(tupleList.tupleConstMult(DIRECTIONS[i], lineDist), self.location);
+                if not friendlyCavalryPositions.count(examinedTile):
+                    break; 
                 lineDist += 1;
-            currentLine = int32Zeros([lineDist,2]);
+                
+            currentLine = [(0,0)] * lineDist;
             for j in range(lineDist):
-                currentLine[j] = self.location + j * DIRECTIONS[i];
+                currentLine[j] = tupleList.tupleAdd(tupleList.tupleConstMult(DIRECTIONS[i], j), self.location);
             result.append(currentLine);
         return result;
     
     def chargeRange(self, impassableSquares, friendlyCavalryPositions):
         '''
-            Returns an integer array consisting of all points which may be targeted
+            Returns a list of tuples consisting of all points which may be targeted
                 by this unit in a cavalry charge.
             
-            impassableSquares : Integer array of all positions which may not be traversed by a unit.
-            friendlyCavalryPositions : Integer array of all positions currently occupied by friendly cavalry.
+            impassableSquares : List of tuples of all positions which may not be traversed by a unit.
+            friendlyCavalryPositions : List of tuples of all positions currently occupied by friendly cavalry.
                 This includes the location of this unit itself.
         '''
         cavalryLines = self._cavalryLines(friendlyCavalryPositions);
@@ -380,14 +368,12 @@ class Cavalry(GamePiece):
         #       ends on impassable terrain.  If this is the case, we will simply remove the last entry.
         if len(impassableSquares) != 0:
             for i in range(len(DIRECTIONS)):
-                lineEndTile = self.location + lengthList[i] * DIRECTIONS[i];
-                impassableDist = min(np.sum((impassableSquares - lineEndTile)**2, axis = 1));
-                if impassableDist == 0:
+                lineEndTile = tupleList.tupleAdd(tupleList.tupleConstMult(DIRECTIONS[i], lengthList[i]), self.location);
+                if impassableSquares.count(lineEndTile):
                     lengthList[i] += -1;
         
-        length = 1 + sum(lengthList);
-        
-        result = int32Zeros([length,2]);
+        length = 1 + sum(lengthList);      
+        result = [(0,0)] * length;
         result[0] = self.location;
         
         index = 0;
@@ -405,23 +391,17 @@ class Cavalry(GamePiece):
     
     def nonChargeAttackRange(self, impassableSquares, friendlyCavalryPositions):
         '''
-            Returns an integer array consisting of all points which may be targeted
+            Returns a list of tuples consisting of all points which may be targeted
                 by this unit in a normal attack, but not by a cavalry charge.
             
-            impassableSquares : Integer array of all positions which may not be traversed by a unit.
-            friendlyCavalryPositions : Integer array of all positions currently occupied by friendly cavalry.
+            impassableSquares : List of tuples of all positions which may not be traversed by a unit.
+            friendlyCavalryPositions : List of tuples of all positions currently occupied by friendly cavalry.
                 This includes the location of this unit itself.
         '''
         chargeSquares = self.chargeRange(impassableSquares, friendlyCavalryPositions);
         attackSquares = self.attackSupportRange(impassableSquares);
         
-        toBeKept = len(attackSquares) * [True];
-        for i in range(len(attackSquares)):
-            distance = min(np.sum((chargeSquares - attackSquares[i])**2, axis = 1));
-            if distance == 0:
-                toBeKept[i] = False;
-        
-        result = attackSquares[toBeKept];
+        result = tupleList.removeList(attackSquares, chargeSquares);
         return result
         
     
@@ -488,13 +468,13 @@ class Relay(GamePiece):
     def communicationRange(self, impassableSquares):
         '''
             Returns all squares within communication range of the relay.
-            Returns a list of 8 numpy integer arrays, each consisting of all tiles in a 
+            Returns a list of 8 lists of tuples, each consisting of all tiles in a 
                 specific direction from self.location, ordered by distance from that point, 
                 stopping when an obstacle is reached or the maximum distance desired is reached.
-            The 8 integer arrays are ordered (using cardinal directions as a reference) as follows:
+            The 8 lists of tuples are ordered (using cardinal directions as a reference) as follows:
                 [NW, N, NE, W, E, SW, S, SE]
             
-                impassableSquares : Integer array of all tile locations which may not be traversed by a
+                impassableSquares : List of tuples of all tile locations which may not be traversed by a
                     friendly communication line.  Likely includes impassable terrain and enemy units.
         '''
         result = self.straightLinePts(impassableSquares);
