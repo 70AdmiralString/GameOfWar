@@ -9,10 +9,12 @@ class GamePiece:
         It possesses general methods and attributes which any piece will need.
     '''
 
+    _cheat_sheat = {'I':'Infantry', 'H':'Cavalry', 'A':'FootArtillery', 'A_H':'SwiftArtillery', 'C':'FootRelay', 'C_H':'SwiftRelay', 'B':'Arsenal'}
+
     def __init__(self, xLocation, yLocation):
         # Attributes which track the state of the piece.
         self.location = (xLocation,yLocation)
-        
+
         self.inCommunication = True;
         self.hasMoved = False;
         self.canMove = True;
@@ -40,21 +42,9 @@ class GamePiece:
         "Only returns the attributes that different from the default ones. If you want to see all values, then use self.__dict__"
 
         #Decide which class to compare our piece to
-        pieceType = self.pieceType
-        if (pieceType == 'I'):
-            test_piece = Infantry(0,0)
-        elif (pieceType == 'H'):
-            test_piece = Cavalry(0,0)
-        elif (pieceType == 'A'):
-            test_piece = FootArtillery(0,0)
-        elif (pieceType == 'A_H'):
-            test_piece = SwiftArtillery(0,0)
-        elif (pieceType == 'C'):
-            test_piece = FootRelay(0,0)
-        elif (pieceType == 'C_H'):
-            test_piece = SwiftRelay(0,0)
-        elif (pieceType == 'B'):
-            test_piece = Arsenal(0,0)
+
+        if (self.pieceType in list(GamePiece._cheat_sheat)):
+            test_piece = eval(GamePiece._cheat_sheat[self.pieceType])(0,0)
         else:
             test_piece = GamePiece(0,0)
 
@@ -75,10 +65,16 @@ class GamePiece:
 
     def __str__(self):
         "A user friendly text representation of the instance. Allows the 'print' to work without giving too much information."
-        "Only gives the peiceType and the Location information"
+        "Only gives essential information"
 
-        dic = {'pieceType': self.pieceType, 'location':tuple(self.location)}
-        return str(dic)
+        essential_info = ['pieceType', 'location'] # A list of all the essential bits of information that we want to appear when printing
+
+        dic = {}
+        for i in range(0,len(essential_info)):
+            dic[essential_info[i]] = getattr(self, essential_info[i])
+
+        dic['location'] = tuple(dic['location']) #tuples are easier to read
+        return "Game Piece " + str( dic)
 
     def quick_init(dicORstr):
         "Takes in the output of __repr__ either as a string or as a dictionary. Returns a new member of the class with this information"
@@ -92,18 +88,9 @@ class GamePiece:
 
         #Decide where the piece belongs
         pieceType = dic['pieceType']
-        if (pieceType == 'I'):
-            piece = Infantry(dic['location'][0],dic['location'][1])
-        elif (pieceType == 'H'):
-            piece = Cavalry(dic['location'][0],dic['location'][1])
-        elif (pieceType == 'A'):
-            piece = FootArtillery(dic['location'][0],dic['location'][1])
-        elif (pieceType == 'A_H'):
-            piece = SwiftArtillery(dic['location'][0],dic['location'][1])
-        elif (pieceType == 'C'):
-            pieceType = FootRelay(dic['location'][0],dic['location'][1])
-        elif (pieceType == 'C_H'):
-            piece = SwiftRelay(dic['location'][0],dic['location'][1])
+
+        if (pieceType in list(GamePiece._cheat_sheat)):
+            piece = eval(GamePiece._cheat_sheat[pieceType])(dic['location'][0],dic['location'][1])
         else:
             piece = GamePiece(dic['location'][0],dic['location'][1])
 
@@ -119,7 +106,7 @@ class GamePiece:
     '''Actual class methods'''
 
                           
-    def adjacentSquares(self, center):
+    def adjacentSquares(center):
         '''
             Returns an list of tuples of all tiles adjacent to the specified center.
         '''
@@ -293,6 +280,7 @@ class Infantry(GamePiece):
         This class represents a single unit of infantry on the board.
         It is represented as a GamePiece with particular specified attributes.
     '''
+
     def __init__(self, xLocation, yLocation):
         super().__init__(xLocation, yLocation)
         
