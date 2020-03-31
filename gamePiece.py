@@ -59,6 +59,8 @@ class GamePiece:
             test_piece = FootRelay(0,0)
         elif (pieceType == 'C_H'):
             test_piece = SwiftRelay(0,0)
+        elif (pieceType == 'B'):
+            test_piece = Arsenal(0,0)
         else:
             test_piece = GamePiece(0,0)
 
@@ -363,7 +365,6 @@ class Cavalry(GamePiece):
             result.append(currentLine);
         return result;
     
-    #TODO: Cavalry charges/melee attack power
     def chargeRange(self, impassableSquares, friendlyCavalryPositions):
         '''
             Returns an integer array consisting of all points which may be targeted
@@ -401,6 +402,28 @@ class Cavalry(GamePiece):
             result[i] = cavalryLines[currentDirIndex][index] + DIRECTIONS[currentDirIndex];
             index += 1;            
         return result;
+    
+    def nonChargeAttackRange(self, impassableSquares, friendlyCavalryPositions):
+        '''
+            Returns an integer array consisting of all points which may be targeted
+                by this unit in a normal attack, but not by a cavalry charge.
+            
+            impassableSquares : Integer array of all positions which may not be traversed by a unit.
+            friendlyCavalryPositions : Integer array of all positions currently occupied by friendly cavalry.
+                This includes the location of this unit itself.
+        '''
+        chargeSquares = self.chargeRange(impassableSquares, friendlyCavalryPositions);
+        attackSquares = self.attackSupportRange(impassableSquares);
+        
+        toBeKept = len(attackSquares) * [True];
+        for i in range(len(attackSquares)):
+            distance = min(np.sum((chargeSquares - attackSquares[i])**2, axis = 1));
+            if distance == 0:
+                toBeKept[i] = False;
+        
+        result = attackSquares[toBeKept];
+        return result
+        
     
 class Artillery(GamePiece):
     '''
@@ -525,6 +548,7 @@ class Arsenal(Relay):
         self.pieceType = 'B';
         self.icon = [];
         
+        self.moveRange = 0;
         self.attackRange = 0;
         self.attackPower = 0;
         self.supportPower = 0;    
