@@ -35,6 +35,9 @@ class GamePiece:
         self.attackPower = 0;
         self.supportPower = 0;
 
+        self.team = None 
+            #Each piece will have a side/team (white or black). There may be more than 2 sides. This will certainly be used in the future. It's used int the GameSettings class. 
+
     '''Functions to help with representation of objects'''
 
     def __repr__(self):

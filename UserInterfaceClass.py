@@ -89,6 +89,7 @@ class Interface:
 		"This should display a list of board configurations along with a brief description of each. The user then can select one. The appropriate board will then be imported from a file which contains a list of all our premade board configurations. That board will then be saved to a global variable 'board' which is defined in RunGame.py"
 
 		board_name = self._pick_Option(self.list_of_boards)
+
 		'''
 		from Board_Configurations import board_name as temp_board
 		global board
@@ -98,7 +99,10 @@ class Interface:
 	def _select_Game_Settings(self):
 		"This should display a list of game settings along with a brief description of each. The user then can select one. If the settings need to probably be imported from a file somewhere. If needed the settings will be saved to a global variable 'game_settings' which is defined in RunGame.py"
 
-		settings_name = self._pick_Option(self.list_of_game_settings)
+		settings_names = [o.name for o in self.list_of_game_settings]
+
+		self.game_settings = self.list_of_game_settings[self._pick_Option(settings_names)]
+
 		'''
 		from Different_game_settings import settings_name as temp_settings
 		global game_settings
@@ -112,6 +116,7 @@ class Interface:
 
 		self.list_of_boards = list_of_boards
 		self.list_of_game_settings = list_of_game_settings
+
 		#self.load_lists()
 
 	def welcome(self):
@@ -130,12 +135,14 @@ class Interface:
 		print("Select your game board")
 		self._select_Board() 
 
+
 		#Copy any information the UI needs from the board
 
 		#Select Game Settings
 		print("Select your game settings")
 		self._select_Game_Settings()
-		
+		print(self.game_settings.description)
+
 		#Copy any information the UI needs form the game_settings
 		#self.num_of_moves = game_settings.num_of_moves
 
