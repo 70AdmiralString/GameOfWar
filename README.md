@@ -18,10 +18,7 @@ This version of the game will be the bare minimum needed for testing later featu
 <<<<<<< HEAD
 - [ ] Get a working RunGame.py file goodbye
 =======
-- [ ] Get a working RunGame.py file hello
->>>>>>> 67bfe6262eea70641882bf444e0e5a531f61929d
+- [ ] Get a working RunGame.py file 
   - [ ] Layout the order of the file and what needs to be imported from where
   - [ ] Create instances of every class for which we need them
   - [ ] Run it
-
-testing merge conflict resolution
