@@ -1,8 +1,8 @@
 "This is the new User Interface Class. It's so advanced that it needs it's own file."
 "The idea is to have the UI have a bunch of predefined funcitons. So to create a new UI, you just instantiate the class and only edit the functions that need changing"
 
-"These are useful functions when defining this class"
 
+#These are useful functions when defining this class
 new_input = input
 def return_number(s):
 	try:
@@ -10,6 +10,7 @@ def return_number(s):
 		return int(s)
 	except ValueError:
 		return str(s) 
+
 
 
 
@@ -22,8 +23,12 @@ class Interface:
 		self.name = "Basic Shitty UI"
 		self.version = 0.1
 
-		self.welcome_message = "Welcome to " + self._game_name "\n" +"You're using the " + self.name + " Version:" + str(self.version)
+		#temp = "Welcome to " + self._game_name "\n" +"You're using the " + self.name + " Version:" + str(self.version)
+		temp = "Welcome to " + self._game_name + "\n" +"You're using the " + self.name + " Version: " + str(self.version)
+
 		self.outro = "Let's get started!"
+		self.welcome_message = temp
+
 
 	"As a convention, variables and methods that start with a single underscore, like _get_Input should not be changed when creating a new instance of the class."
 
@@ -72,66 +77,74 @@ class Interface:
 			else:
 				print('not a valid option')
 
-	def _select_Player(self):
+	def _select_player(self):
 		"For now, it just grabs the name of the player. But once we get a player class it will instantiate the Player. In the future it could select from a list of players."
 
 		print('Enter your name:')
 		player_name = self._get_Input(forbidden = ['', 'NEW PLAYER', 'OPTIONS'])
-			#self.player = Human_Player(player_name)
-			self.player_name = player_name
+		#self.player = Human_Player(player_name)
+		self.player_name = player_name
 
-	def _select_Board(self, list_of_boards):
+	def _select_Board(self):
 		"This should display a list of board configurations along with a brief description of each. The user then can select one. The appropriate board will then be imported from a file which contains a list of all our premade board configurations. That board will then be saved to a global variable 'board' which is defined in RunGame.py"
 
-		board_name = self._pick_Option(list_of_boards)
+		board_name = self._pick_Option(self.list_of_boards)
+		'''
 		from Board_Configurations import board_name as temp_board
 		global board
 		board = temp_board
+		'''
 
-	def _select_Game_Settings(self, list_of_game_settings):
+	def _select_Game_Settings(self):
 		"This should display a list of game settings along with a brief description of each. The user then can select one. If the settings need to probably be imported from a file somewhere. If needed the settings will be saved to a global variable 'game_settings' which is defined in RunGame.py"
 
-		settings_name = self._pick_Option(list_of_game_settings)
+		settings_name = self._pick_Option(self.list_of_game_settings)
+		'''
 		from Different_game_settings import settings_name as temp_settings
 		global game_settings
 		game_settings = temp_settings
+		'''
 
 	"Now we write the parts of the code that get changed a lot"
 
-	def setup(self):
+	def setup(self, list_of_boards, list_of_game_settings):
 		"If there is any setup that needs to be done before the welcome, it goes here. Probably we import/load the list_of_boards and list_of_game_settings."
+
+		self.list_of_boards = list_of_boards
+		self.list_of_game_settings = list_of_game_settings
 		#self.load_lists()
 
 	def welcome(self):
 		"Plays the welcome message. Gives the selections of players, board layouts, and AI. Gives the options menu."
 
-		#welcome's the player
+		#welcomes the player
 		print(self.welcome_message)
 		
 		#Enter player's name
-		self._selectPlayer()
+		self._select_player()
 
 		#Confirms name
 		print("Hello " + self.player_name)
 
 		#Pick the board layout
 		print("Select your game board")
-		self._select_Board(list_of_boards) #where does this list come from?
+		self._select_Board() 
 
 		#Copy any information the UI needs from the board
 
 		#Select Game Settings
 		print("Select your game settings")
-		self._select_Game_Settings(list_of_game_settings)
+		self._select_Game_Settings()
 		
 		#Copy any information the UI needs form the game_settings
-		self.num_of_moves = game_settings.num_of_moves
+		#self.num_of_moves = game_settings.num_of_moves
 
 		#You exit the menu screen and display the outro. Now the game is ready to start
 		print(self.outro)
 
 	def game_Setup(self, board, game_settings):
 		"The board will be an instance of the GameBoard class. It will be used to print out the board. The game_settings variable will tell us how many pieces we're using, of what type, and whether we're putting them down or using a predefined starting location."
+		pass
 
 		#print board
 		#place pieces
