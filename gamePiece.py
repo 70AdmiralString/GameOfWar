@@ -12,9 +12,9 @@ class GamePiece:
 
     _cheat_sheat = {'I':'Infantry', 'H':'Cavalry', 'A':'FootArtillery', 'A_H':'SwiftArtillery', 'C':'FootRelay', 'C_H':'SwiftRelay', 'B':'Arsenal'}
 
-    def __init__(self, xLocation, yLocation):
+    def __init__(self, xLocation, yLocation, team = None):
         # Attributes which track the state of the piece.
-        self.location = (xLocation,yLocation)
+        self.location = Vector(xLocation,yLocation)
 
         self.inCommunication = True;
         self.hasMoved = False;
@@ -35,7 +35,7 @@ class GamePiece:
         self.attackPower = 0;
         self.supportPower = 0;
 
-        self.team = None 
+        self.team = team;
             #Each piece will have a side/team (white or black). There may be more than 2 sides. This will certainly be used in the future. It's used int the GameSettings class. 
 
     '''Functions to help with representation of objects'''
@@ -144,7 +144,7 @@ class GamePiece:
         width = 2 * self.moveRange + 1;
         result = [Vector(0,0)] * (width**2);
         for i in range(width**2):
-            result[i] = [i//width - self.moveRange, i%width - self.moveRange];
+            result[i] = Vector(i//width - self.moveRange, i%width - self.moveRange);
         return [j + self.location for j in result]
     
     def movementRange(self, impassableSquares):
@@ -159,17 +159,17 @@ class GamePiece:
         candidates = vecRemove(candidates, self.location);
         
         # Removing candidate points which are impassable.
-        candidates = Vector.removeList(candidates, impassableSquares);
+        candidates = vecRemoveList(candidates, impassableSquares);
         
         # Determining which remaining candidate points are reachable in the specified number of moves 
         # by doing 1 move at a time
-        result = [self.location];
+        result = [self.location];    
         currentLayer = [self.location];
         for i in range(self.moveRange):
             goodIndices = [];
             badIndices = [];
             for j in range(len(candidates)):
-                distances = [(i - candidates[j]).normSq() for i in currentLayer];
+                distances = [(k - candidates[j]).normSq() for k in currentLayer];
                 if min(distances) <= 2:
                     goodIndices.append(j);
                 else:
@@ -195,7 +195,7 @@ class GamePiece:
                         This value is taken as a default if no value is given.
         '''
         if impassableSquares == [] and maxDist == -1:
-            print("Infinite range vision with no obstacles attempted - output set to []\n")
+            raise Exception("Infinite range vision with no obstacles attempted.")
             return [];
         else:
             result = [];
@@ -274,15 +274,15 @@ class GamePiece:
         options = self.movementRange(impassableSquares)
         if self.canMove:
             if self.hasMoved:
-                print("This piece has already moved, movement not carried out.")
+                raise Exception("This piece has already moved.")
             else:
                 if options.count(newLocation) and (self.location != newLocation):
                     self.updateLocation(newLocation);
                     self.hasMoved = True;
                 else:
-                    print("Not a valid move, movement not carried out.")
+                    raise Exception("Not a valid move.")
         else:
-            print("This piece is not movable, movement not carried out.")
+            raise Exception("This piece is not movable.")
                 
     def refreshMovement(self):
         '''
@@ -297,8 +297,8 @@ class Infantry(GamePiece):
         It is represented as a GamePiece with particular specified attributes.
     '''
 
-    def __init__(self, xLocation, yLocation):
-        super().__init__(xLocation, yLocation)
+    def __init__(self, xLocation, yLocation, team = None):
+        super().__init__(xLocation, yLocation, team)
         
         self.pieceType = 'I';
         
@@ -315,8 +315,8 @@ class Cavalry(GamePiece):
         This class represents a single unit of cavalry on the board.
         It is represented as a GamePiece with particular specified attributes.
     '''
-    def __init__(self, xLocation, yLocation):
-        super().__init__(xLocation, yLocation)
+    def __init__(self, xLocation, yLocation, team = None):
+        super().__init__(xLocation, yLocation, team)
         self.canUseForts = False;
         
         self.pieceType = 'H';
@@ -413,8 +413,8 @@ class Artillery(GamePiece):
         It is further divided into foot artillery and swift artillery based on speed.
         It is represented as a GamePiece with particular specified attributes.
     '''
-    def __init__(self, xLocation, yLocation):
-        super().__init__(xLocation, yLocation)
+    def __init__(self, xLocation, yLocation, team = None):
+        super().__init__(xLocation, yLocation, team)
         
         self.moveRange = 0;
         
@@ -428,8 +428,8 @@ class FootArtillery(Artillery):
         This class represents a single unit of foot artillery on the board.
         It is represented as a GamePiece with particular specified attributes.
     '''
-    def __init__(self, xLocation, yLocation):
-        super().__init__(xLocation,yLocation)
+    def __init__(self, xLocation, yLocation, team = None):
+        super().__init__(xLocation,yLocation, team)
         
         self.pieceType = 'A';
         
@@ -441,8 +441,8 @@ class SwiftArtillery(Artillery):
         This class represents a single unit of swift artillery on the board.
         It is represented as a GamePiece with particular specified attributes.
     '''
-    def __init__(self, xLocation, yLocation):
-        super().__init__(xLocation, yLocation)
+    def __init__(self, xLocation, yLocation, team = None):
+        super().__init__(xLocation, yLocation, team)
         self.canUseForts = False;        
         
         self.pieceType = 'A_H';
@@ -456,8 +456,8 @@ class Relay(GamePiece):
         It is further divided into foot relays, swift relays, and arsenals based on speed.
         It is represented as a GamePiece with particular specified attributes.
     '''
-    def __init__(self, xLocation, yLocation):
-        super().__init__(xLocation, yLocation)
+    def __init__(self, xLocation, yLocation, team = None):
+        super().__init__(xLocation, yLocation, team)
         
         self.moveRange = 0;
         
@@ -487,8 +487,8 @@ class FootRelay(Relay):
         This class represents a single swift relay unit on the board.
         It is represented as a GamePiece with particular specified attributes.
     '''
-    def __init__(self, xLocation, yLocation):
-        super().__init__(xLocation, yLocation)
+    def __init__(self, xLocation, yLocation, team = None):
+        super().__init__(xLocation, yLocation, team)
         
         self.pieceType = 'C';
         
@@ -500,8 +500,8 @@ class SwiftRelay(Relay):
         This class represents a single swift relay unit on the board.
         It is represented as a GamePiece with particular specified attributes.
     '''
-    def __init__(self, xLocation, yLocation):
-        super().__init__(xLocation, yLocation)
+    def __init__(self, xLocation, yLocation, team = None):
+        super().__init__(xLocation, yLocation, team)
         self.canUseForts = False;
         
         self.pieceType = 'C_H';
@@ -516,8 +516,8 @@ class Arsenal(Relay):
         Another piece may be stacked on top of it.
         An enemy unit being stacked on this location will destroy the arsenal.
     '''
-    def __init__(self, xLocation, yLocation):
-        super().__init__(xLocation, yLocation)
+    def __init__(self, xLocation, yLocation, team = None):
+        super().__init__(xLocation, yLocation, team)
         
         self.occupiesSquare = False;
         self.canMove = False;

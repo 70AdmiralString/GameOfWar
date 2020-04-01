@@ -87,6 +87,40 @@ class Board():
         for piece in gamePieceList:
             currentTile = self.getTile(piece.location);
             currentTile.addPiece(piece);
+            
+    def __str__(self):
+        # This will output two grids.  The first will display types of Tile objects.  
+        # The second will display units and their types where they appear.
+        
+        # Determine how big to make grid spacing
+        tileSpacing = max([max([len(tile.terrainType) for tile in row]) for row in self.tileList]);
+        unitSpacing = max([max([sum([len(piece.pieceType) for piece in tile.occupants]) for tile in row]) for row in self.tileList]);
+
+        result1 = '';
+        result2 = '';
+        for row in self.tileList:
+            tilerow = '';
+            unitrow = '';
+            for tile in row:
+                spaceNeeded = len(tile.terrainType);
+                leftSpace = (tileSpacing - spaceNeeded)//2;
+                rightSpace = tileSpacing - spaceNeeded - leftSpace;
+                tilerow += '|' + leftSpace * ' ' + tile.terrainType + rightSpace * ' ' + '|';
+                
+                spaceNeeded = sum([len(piece.pieceType) for piece in tile.occupants]);
+                leftSpace = (unitSpacing - spaceNeeded)//2;
+                rightSpace = unitSpacing - spaceNeeded - leftSpace;
+                unitrow += '|' + leftSpace * ' ';
+                for piece in tile.occupants:
+                    unitrow += piece.pieceType;
+                unitrow += rightSpace * ' ' + '|';           
+            tilerow += '\n';
+            unitrow += '\n';
+            result1 = tilerow + result1;
+            result2 = unitrow + result2;  
+        result1 = 'Terrain Grid:\n' + result1;
+        result2 = 'Unit Grid:\n' + result2;
+        return result1 + result2;
         
     def getTile(self, location):
         """
@@ -96,9 +130,111 @@ class Board():
         y = location[1];
         return self.tileList[y - self.minY][x - self.minX]
         
+    def getTilesByType(self, terrainType):
+        """
+            Outputs a list of all tile locations on the board of the type specified.
+            
+                terrainType is a string, representing a particular Tile terrain type.
+        """
+        result = [];
+        for i in range(self.minY, self.maxY):
+            for j in range(self.minX, self.maxX):
+                location = v.Vector(i,j);
+                currentTile = self.getTile(location);
+                if currentTile.terrainType == terrainType:
+                    result.append(location);
+        return result
+    
+    def getPiecesByType(self, unitType):
+        """
+            Outputs a list of all gamePieces on the board of the type specified.
+            
+                unit is a string, representing a particular GamePiece type.
+        """
+        result = [];
+        for i in range(self.minY, self.maxY):
+            for j in range(self.minX, self.maxX):
+                location = v.Vector(i,j);
+                currentTile = self.getTile(location);
+                for unit in currentTile.occupants:
+                    if unit.pieceType == unitType:
+                        result.append(unit);
+        return result
+    
+    def getPiecesByTeam(self, team):
+        """
+            Outputs a list of all gamePieces on the board on the team specified.
+            
+                team is a string
+        """
+        result = [];
+        for i in range(self.minY, self.maxY):
+            for j in range(self.minX, self.maxX):
+                location = v.Vector(i,j);
+                currentTile = self.getTile(location);
+                for unit in currentTile.occupants:
+                    if unit.team == team:
+                        result.append(unit);
+        return result
+ 
+    def determineImpassable(self, impassableTypes):
+        """
+            Outputs a list of all tiles on the board corresponding to all of the impassable types of tiles.
+            Different definitions of impassable are required for different types of actions in the game.
+            
+                impassableTypes is a list of strings, each corresponding to a terrain type of a Tile.
+        """
+        result = [];
+        for terrain in impassableTypes:
+            result.append(self.getTilesByType(terrain));
+        return result
+ 
+    def addPiece(self, gamePiece):
+        """
+            Add the selected piece to the board.
+            
+                gamePiece is a GamePiece object.  
+                    Notably, it contains the desired location as an attribute.
+        """    
+        tile = self.getTile(gamePiece.location);
+        for unit in tile.occupants:
+            if unit.occupiesSquare:
+                raise Exception("This square is already full.")
+        tile.addPiece(gamePiece)
+ 
+    def removePiece(self, gamePiece):
+        """
+            Removes the selected piece from the board.
+            
+                gamePiece is a GamePiece object.  
+                    Notably, it contains its current location as an attribute.
+        """
+        tile = self.getTile(gamePiece.location);
+        tile.removePiece(gamePiece)
+    
+    def movePiece(self, gamePiece, newLocation, impassableSquares):
+        """
+            Moves the selected gamePiece from its current location to the specified new location.
+            
+                gamePiece is a GamePiece object.  
+                    Notably, it contains its current location as an attribute.
+                newLocation is a Vector representing the new location of gamePiece.
+                impassableSquares is a list of Vector locations representing which tiles pieces may not cross.
+            
+            This will throw an exception if the move is not valid, given the impassable terrain 
+                and based on whether or not the unit has already moved.
+        """
+        self.removePiece(gamePiece);
+        try:
+            gamePiece.move(newLocation, impassableSquares);
+        except Exception as error:
+            print(error)
+        self.addPiece(gamePiece)
         
-        
-        
+# Some sample variables for testing purposes
+tileList1 = [(v.Vector(0,0),'A'),(v.Vector(0,1), 'B'),(v.Vector(1,1),'C')]
+gamePieceList1 = [gp.Infantry(1,1,'b'), gp.Cavalry(0,1,'b'),gp.Arsenal(0,0,'w'), gp.SwiftArtillery(0,0,'w')]
+board1 = Board(tileList1,gamePieceList1);
         
         
         
