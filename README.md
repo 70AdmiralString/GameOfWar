@@ -15,7 +15,13 @@ This version of the game will be the bare minimum needed for testing later featu
 - [ ] Create a text and key entry based User Interface
   - [ ] Figure out whether the Player Class or Interface Class (or both?) should be handling player moves
   - [ ] Finish the Interface Class
+<<<<<<< HEAD
 - [ ] Get a working RunGame.py file goodbye
+=======
+- [ ] Get a working RunGame.py file hello
+>>>>>>> 67bfe6262eea70641882bf444e0e5a531f61929d
   - [ ] Layout the order of the file and what needs to be imported from where
   - [ ] Create instances of every class for which we need them
   - [ ] Run it
+
+testing merge conflict resolution
