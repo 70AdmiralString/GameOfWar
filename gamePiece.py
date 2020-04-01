@@ -28,7 +28,6 @@ class GamePiece:
         
         # Attributes of the piece based on the type of piece.
         self.pieceType = '';
-        self.icon = [];
         
         self.moveRange = 0;
 
@@ -79,6 +78,11 @@ class GamePiece:
 
         dic['location'] = tuple(dic['location']) #tuples are easier to read
         return "Game Piece " + str( dic)
+    
+    def __eq__(self, other):
+        if type(self) != type(other):
+            return False;
+        return self.location == other.location
 
     def quick_init(dicORstr):
         "Takes in the output of __repr__ either as a string or as a dictionary. Returns a new member of the class with this information"
@@ -115,6 +119,22 @@ class GamePiece:
             Returns an list of vectors of all tiles adjacent to the specified center.
         '''
         return [i + center for i in DIRECTIONS]
+    
+    def localFormation(self, pieceLocations):
+        """
+            Returns a list of vectors with each vector representing a square containing a piece in pieceLocations,
+                representing the connected component of pieces containing this piece,
+                with adjacency defined using the 8 adjacent squares to each square.
+            
+                pieceLocations is a list of vectors, representing all pieces being considered.
+        """
+        formation = [self.location];
+        for square in formation:
+            candidates = GamePiece.adjacentSquares(square);
+            for j in candidates:
+                if pieceLocations.count(j) and not formation.count(j):
+                    formation.append(j);
+        return formation           
     
     def _movementRangeCandidates(self): 
         '''
@@ -281,7 +301,6 @@ class Infantry(GamePiece):
         super().__init__(xLocation, yLocation)
         
         self.pieceType = 'I';
-        self.icon = [];
         
         self.moveRange = 1;
         
@@ -301,7 +320,6 @@ class Cavalry(GamePiece):
         self.canUseForts = False;
         
         self.pieceType = 'H';
-        self.icon = [];
         
         self.moveRange = 2;
         
@@ -414,7 +432,6 @@ class FootArtillery(Artillery):
         super().__init__(xLocation,yLocation)
         
         self.pieceType = 'A';
-        self.icon = [];
         
         self.moveRange = 1;
  
@@ -429,7 +446,6 @@ class SwiftArtillery(Artillery):
         self.canUseForts = False;        
         
         self.pieceType = 'A_H';
-        self.icon = [];
         
         self.moveRange = 2;       
 
@@ -475,7 +491,6 @@ class FootRelay(Relay):
         super().__init__(xLocation, yLocation)
         
         self.pieceType = 'C';
-        self.icon = [];
         
         self.moveRange = 1;
         
@@ -490,7 +505,6 @@ class SwiftRelay(Relay):
         self.canUseForts = False;
         
         self.pieceType = 'C_H';
-        self.icon = [];
         
         self.moveRange = 2;
         
@@ -510,7 +524,6 @@ class Arsenal(Relay):
         self.canUseForts = False;
         
         self.pieceType = 'B';
-        self.icon = [];
         
         self.moveRange = 0;
         self.attackRange = 0;
