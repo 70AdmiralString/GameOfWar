@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import vector as v
-import Piece as gp
+import gamePiece as gp
 
 class Tile():
     """
