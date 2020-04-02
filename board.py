@@ -94,7 +94,8 @@ class Board():
         
         # Determine how big to make grid spacing
         tileSpacing = max([max([len(tile.terrainType) for tile in row]) for row in self.tileList]);
-        unitSpacing = max([max([sum([len(piece.pieceType) for piece in tile.occupants]) for tile in row]) for row in self.tileList]);
+        unitSpacing = max([max([-1 + sum([len(piece.pieceType) + 1 for piece in tile.occupants]) 
+                                for tile in row]) for row in self.tileList]);
 
         result1 = '';
         result2 = '';
@@ -107,12 +108,13 @@ class Board():
                 rightSpace = tileSpacing - spaceNeeded - leftSpace;
                 tilerow += '|' + leftSpace * ' ' + tile.terrainType + rightSpace * ' ' + '|';
                 
-                spaceNeeded = sum([len(piece.pieceType) for piece in tile.occupants]);
+                spaceNeeded = -1 + sum([len(piece.pieceType) + 1 for piece in tile.occupants]);
                 leftSpace = (unitSpacing - spaceNeeded)//2;
                 rightSpace = unitSpacing - spaceNeeded - leftSpace;
                 unitrow += '|' + leftSpace * ' ';
                 for piece in tile.occupants:
-                    unitrow += piece.pieceType;
+                    unitrow += piece.pieceType + ' ';
+                unitrow = unitrow[:-1]
                 unitrow += rightSpace * ' ' + '|';           
             tilerow += '\n';
             unitrow += '\n';
@@ -120,7 +122,7 @@ class Board():
             result2 = unitrow + result2;  
         result1 = 'Terrain Grid:\n' + result1;
         result2 = 'Unit Grid:\n' + result2;
-        return result1 + result2;
+        return result1 + '\n' + result2;
         
     def getTile(self, location):
         """
@@ -130,50 +132,58 @@ class Board():
         y = location[1];
         return self.tileList[y - self.minY][x - self.minX]
         
-    def getTilesByType(self, terrainType):
+    def getTilesByAttribute(self, *kwargs):
         """
             Outputs a list of all tile locations on the board of the type specified.
             
-                terrainType is a string, representing a particular Tile terrain type.
+                kwargs makes up several Tile attributes and values for which we wish to select.
+                    A common example is terrainType
         """
+        if type(kwargs) == dict:
+            attributes = list(vars(Tile()).keys());
+            for key, value in kwargs.items():
+                if key not in attributes:
+                    raise Exception('Tile objects do not have the attribute %s' %key + '.')
+            
         result = [];
-        for i in range(self.minY, self.maxY):
-            for j in range(self.minX, self.maxX):
+        for i in range(self.minY, self.maxY + 1):
+            for j in range(self.minX, self.maxX + 1):
                 location = v.Vector(i,j);
                 currentTile = self.getTile(location);
-                if currentTile.terrainType == terrainType:
+                isGoodTile = True;
+                if type(kwargs) == dict:
+                    for key, value in kwargs.items():
+                        if not currentTile.key == value:
+                            isGoodTile = False;
+                if isGoodTile:
                     result.append(location);
         return result
     
-    def getPiecesByType(self, unitType):
+    def getPiecesByAttribute(self, *kwargs):
         """
             Outputs a list of all gamePieces on the board of the type specified.
             
-                unit is a string, representing a particular GamePiece type.
+                kwargs makes up several GamePiece attributes for which we wish to select.
+                    Common examples are pieceType and team
         """
+        if type(kwargs) == dict:
+            attributes = list(vars(gp.GamePiece(0,0)).keys());
+            for key, value in kwargs.items():
+                if key not in attributes:
+                    raise Exception('GamePiece objects do not have the attribute %s' %key + '.')
+                
         result = [];
-        for i in range(self.minY, self.maxY):
-            for j in range(self.minX, self.maxX):
+        for i in range(self.minY, self.maxY + 1):
+            for j in range(self.minX, self.maxX + 1):
                 location = v.Vector(i,j);
                 currentTile = self.getTile(location);
                 for unit in currentTile.occupants:
-                    if unit.pieceType == unitType:
-                        result.append(unit);
-        return result
-    
-    def getPiecesByTeam(self, team):
-        """
-            Outputs a list of all gamePieces on the board on the team specified.
-            
-                team is a string
-        """
-        result = [];
-        for i in range(self.minY, self.maxY):
-            for j in range(self.minX, self.maxX):
-                location = v.Vector(i,j);
-                currentTile = self.getTile(location);
-                for unit in currentTile.occupants:
-                    if unit.team == team:
+                    isGoodUnit = True;
+                    if type(kwargs) == dict:
+                        for key, value in kwargs.items():
+                            if not unit.key == value:
+                                isGoodUnit = False;
+                    if isGoodUnit:
                         result.append(unit);
         return result
  
@@ -230,6 +240,18 @@ class Board():
         except Exception as error:
             print(error)
         self.addPiece(gamePiece)
+        
+    def refreshPieces(self, *kwargs):
+        """
+            Takes all pieces with specified attributes and alters their movement status
+                so piece.hasMoved = False, enabling them to move again
+                
+                kwargs makes up several GamePiece attributes for which we wish to select.
+        """
+        pieces = self.getPiecesByAttribute(kwargs);
+        print(pieces)
+        for piece in pieces:
+            piece.refreshMovement();
         
 # Some sample variables for testing purposes
 tileList1 = [(v.Vector(0,0),'A'),(v.Vector(0,1), 'B'),(v.Vector(1,1),'C')]

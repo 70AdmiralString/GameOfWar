@@ -6,6 +6,7 @@ This version of the game will be the bare minimum needed for testing later featu
 - 2 players but on 1 computer
 -  Minimal image rendering
 - User inputs is handled by text and key entries
+- 
 
 ## Version 1.0 Check List
 - [ ] Finish the Game Engine
