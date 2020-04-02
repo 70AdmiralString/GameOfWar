@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import vector as v
-import Piece as gp
+import gamePiece as gp
 
 class Tile():
     """
@@ -207,9 +207,10 @@ class Board():
                     Notably, it contains the desired location as an attribute.
         """    
         tile = self.get_tile(game_piece.location);
-        for unit in tile.occupants:
-            if unit.occupies_square:
-                raise Exception("This square is already full.")
+        if game_piece.occupies_square:
+            for unit in tile.occupants:
+                if unit.occupies_square:
+                    raise Exception("This square is already full.")
         tile.add_piece(game_piece)
  
     def remove_piece(self, game_piece):
