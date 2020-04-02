@@ -16,7 +16,7 @@ So the goal of this Shitty User Interface is to allow us to do tests, not to hav
 
 '''
 
-#import gamePiece 
+#import Piece 
 from gamePiece import *
 from board import *
 
@@ -145,7 +145,7 @@ def _get_class(obj):
 def _get_key(obj):
 	#Returns the prefered key
 
-	if issubclass(_get_class(obj), GamePiece):
+	if issubclass(_get_class(obj), Piece):
 		if (obj.pieceType != ''):
 			return obj.pieceType
 
@@ -162,11 +162,11 @@ def _get_display_name(obj):
 	if (type(obj)==str):
 		return obj 
 
-	elif issubclass(_get_class(obj), GamePiece):
+	elif issubclass(_get_class(obj), Piece):
 		if (obj.pieceType == ''):
 			return 'Game Piece'
-		elif (obj.pieceType in list(GamePiece._cheat_sheat)):
-			return GamePiece._cheat_sheat[obj.pieceType]
+		elif (obj.pieceType in list(Piece._cheat_sheat)):
+			return Piece._cheat_sheat[obj.pieceType]
 		else:
 			raise Exception("'" + str(obj.pieceType) + "'" + " is not a real piece type.")
 
