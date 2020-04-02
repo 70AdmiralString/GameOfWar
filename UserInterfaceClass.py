@@ -1,5 +1,25 @@
 "This is the new User Interface Class. It's so advanced that it needs it's own file."
-"The idea is to have the UI have a bunch of predefined funcitons. So to create a new UI, you just instantiate the class and only edit the functions that need changing"
+"The idea is to have the UI have a bunch of predefined functions. So to create a new UI, you just instantiate the class and only edit the functions that need changing"
+
+
+'''
+So the goal of this Shitty User Interface is to allow us to do tests, not to have a working game with all the bells and whistles. To get that I need:
+
+- [ ] A simple graphic rendering of the current board state
+- [X] A way for the user to choose different options (select from a list of pieces, valid moves, tiles, etc...)
+	- Well document the functions to make it clear to others how to use them. 
+- [ ] Update the state based on the user input
+- [ ] To be able to see information about individual objects without exiting the program
+	- Maybe put a more info option each time I give a list of options. It just displays all the useful info from each option.
+	- Also a way to access more info about specific tiles when looking at the board.
+- [ ] We don't want to have to go back through all the old dialog to debug an error that 3 prompts in. We need a way to start from the middle
+	- The current architecture of the building the UI as a class and then running it through a function kind of forces people to start from the beginning. But if I make the UI a collection of functions, then we can run each one starting with the appropriate data. 
+	- We still have one larger function RunGame which puts all the smaller functions in order. It would defined all the 'global' variables like player_name, num_of_teams, etc... that the functions need access to if we're doing them in a row. 
+- [ ] A simple 'move' and 'turn' counter
+- [ ] A way to undo a move
+
+'''
+
 
 
 #These are useful functions when defining this class
@@ -32,7 +52,7 @@ class Interface:
 
 	"As a convention, variables and methods that start with a single underscore, like _get_Input should not be changed when creating a new instance of the class."
 
-	def _get_Input(self, forbidden = [], message = "Not a valid input, try again."):
+	def _get_Input(self, forbidden = [], error_message = "Not a valid input, try again."):
 		"Returns a valid input in all caps. Used to record the name of a player."
 		choosing = True
 		while (choosing == True):
@@ -41,7 +61,7 @@ class Interface:
 			if (choice not in forbidden):
 				choosing = False
 			else:
-				print(message)
+				print(error_message)
 		return choice
 
 	def _pick_Option(self, options, keys = None, return_values = None):

@@ -10,7 +10,15 @@ class GamePiece:
         It possesses general methods and attributes which any piece will need.
     '''
 
+    #changing these effects how things are displayed in the UI
+    display_sheat = {'I':'Infantry', 'H':'Cavalry', 'A':'Foot Artillery', 'A_H':'Mounted Artillery', 'C':'Foot Relay', 'C_H':'Mounted Relay'}
+
+    #changing this effects which keys users need to enter
+    key_sheat = {'I':'I', 'H':'C', 'A':'FA', 'A_H':'MA', 'C':'FR', 'C_H':'MR', '':''}
+
+    #changing these breaks the print and repr functions which use the eval function. These strings need to match the names of the subclasses. DO NOT CHANGE THIS
     _cheat_sheat = {'I':'Infantry', 'H':'Cavalry', 'A':'FootArtillery', 'A_H':'SwiftArtillery', 'C':'FootRelay', 'C_H':'SwiftRelay', 'B':'Arsenal'}
+
 
     def __init__(self, xLocation, yLocation, team = None):
         # Attributes which track the state of the piece.
@@ -109,7 +117,21 @@ class GamePiece:
             setattr(piece,key_list[i],dic[key_list[i]]) 
         return piece
        
-    
+    def update_display_name(self):
+        "adds location to the display_name"
+
+        if (self.pieceType == ''):
+            raise AttributeError('This piece does not have a valid type')
+
+        dis = GamePiece.display_sheat[self.pieceType]
+        p = ' at '
+        lay = str(self.location)
+        
+        self.display_name = dis + p + lay 
+
+    def _get_type_key(self):
+        self.type_key = GamePiece.key_sheat[self.pieceType]
+
           
     '''Actual class methods'''
 
@@ -298,18 +320,20 @@ class Infantry(GamePiece):
     '''
 
     def __init__(self, xLocation, yLocation, team = None):
+
         super().__init__(xLocation, yLocation, team)
         
         self.pieceType = 'I';
+
         
         self.moveRange = 1;
         
         self.attackRange = 2;
         self.attackPower = 4;
         self.supportPower = 6;
+        self._get_type_key()
 
-        
-        
+
 class Cavalry(GamePiece):
     '''
         This class represents a single unit of cavalry on the board.
@@ -327,6 +351,8 @@ class Cavalry(GamePiece):
         self.attackPower = 4;
         self.chargePower = 7;
         self.supportPower = 5;
+        self._get_type_key()
+
         
     def _cavalryLines(self, friendlyCavalryPositions):
         '''
@@ -422,7 +448,6 @@ class Artillery(GamePiece):
         self.attackPower = 5;
         self.supportPower = 8;
      
-        
 class FootArtillery(Artillery):
     '''
         This class represents a single unit of foot artillery on the board.
@@ -434,6 +459,7 @@ class FootArtillery(Artillery):
         self.pieceType = 'A';
         
         self.moveRange = 1;
+        self._get_type_key()
  
         
 class SwiftArtillery(Artillery):
@@ -448,6 +474,7 @@ class SwiftArtillery(Artillery):
         self.pieceType = 'A_H';
         
         self.moveRange = 2;       
+        self._get_type_key()
 
         
 class Relay(GamePiece):
@@ -464,7 +491,7 @@ class Relay(GamePiece):
         self.attackRange = 2;
         self.attackPower = 0;
         self.supportPower = 1;       
-        
+
     def communicationRange(self, impassableSquares):
         '''
             Returns all squares within direct communication range of the relay.
@@ -493,6 +520,7 @@ class FootRelay(Relay):
         self.pieceType = 'C';
         
         self.moveRange = 1;
+        self._get_type_key()
         
 
 class SwiftRelay(Relay):
@@ -507,6 +535,7 @@ class SwiftRelay(Relay):
         self.pieceType = 'C_H';
         
         self.moveRange = 2;
+        self._get_type_key()
         
 
 class Arsenal(Relay):
@@ -541,7 +570,9 @@ c =  GamePiece.quick_init("{'location': (9, 7), 'pieceType': 'Fake Piece', 'move
 d = GamePiece.quick_init({'location': (-5, 0), 'pieceType': '100'})
 e = GamePiece.quick_init({'location': (30, 0), 'pieceType': 'C_H',  'extraValue':"easter egg"})
 f = Infantry.quick_init("{'location': (9, 7), 'pieceType': 'I', 'moveRange': -9}")
-       
+  
+g = Infantry(5,4)
+h = SwiftRelay(-10,4)     
         
 
         
