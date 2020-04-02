@@ -2,43 +2,43 @@
 # -*- coding: utf-8 -*-
 
 import vector as v
-import gamePiece as gp
+import Piece as gp
 
 class Tile():
     """
         Represents a single tile of the map.  Contains attributes for a string for a terrain type, 
-        and a list of gamePieces if the tile is occupied.
+        and a list of Pieces if the tile is occupied.
     """
     
-    def __init__(self, terrainType = '', occupants = None):
+    def __init__(self, terrain_type = '', occupants = None):
         """
-            terrainType is a string, by default set to '' to represent an empty tile 
+            terrain_type is a string, by default set to '' to represent an empty tile 
                 (empty tiles are used only to fill up space in non-rectangular boards)
-            occupants is a list of GamePiece objects, by default set to an empty list for an unoccupied tile
+            occupants is a list of Piece objects, by default set to an empty list for an unoccupied tile
         """
         if occupants == None:
             occupants = [];
         
-        self.terrainType = terrainType;
+        self.terrain_type = terrain_type;
         self.occupants = occupants;
         
     def __repr__(self):
         return str(self.__dict__)
         
-    def addPiece(self, gamePiece):
+    def add_piece(self, game_piece):
         """
-            Adds gamePiece to the list of occupants of this tile.
+            Adds game_piece to the list of occupants of this tile.
         """
-        self.occupants.append(gamePiece)
+        self.occupants.append(game_piece)
         
-    def removePiece(self, gamePiece):
+    def remove_piece(self, game_piece):
         """
-            If gamePiece is one of the occupants of this tile, removes it.
+            If game_piece is one of the occupants of this tile, removes it.
         """
-        if self.occupants.count(gamePiece):
-            self.occupants.remove(gamePiece)
+        if self.occupants.count(game_piece):
+            self.occupants.remove(game_piece)
         else:
-            print("Selected gamePiece not present in this tile")
+            print("Selected game_piece not present in this tile")
             
 
 class Board():  
@@ -46,76 +46,76 @@ class Board():
         Represents an entire map of a game.  Contains a list of lists of Tile objects.
     """
     
-    def __init__(self, tileList, gamePieceList = None):
+    def __init__(self, tile_list, game_piece_list = None):
         """
-            tileList is a list of tuples, each tuple containing a 
+            tile_list is a list of tuples, each tuple containing a 
                 Vector and a string, representing the location and terrain type of a tile, respectively.
                 If the list of locations is not a rectangular grid, empty tiles (terrain '') will be
                     created to fill empty space.
-            gamePieceList is a list of gamePieces,
-                It should be ensured that each location of a piece in gamePieceList falls within tileList.
+            game_piece_list is a list of Pieces,
+                It should be ensured that each location of a piece in game_piece_list falls within tile_list.
                 By default, this list is set to be empty.
                 
-            The list of list of Tile objects created (self.tileList) will be indexed 
+            The list of list of Tile objects created (self.tile_list) will be indexed 
                 so that a tile at location (x,y) can be found as
-                self.tileList[y - self.minY][x - self.minX]
+                self.tile_list[y - self.minY][x - self.minX]
         """
-        if gamePieceList == None:
-            gamePieceList = [];
+        if game_piece_list == None:
+            game_piece_list = [];
         
-        self.minX = min([i[0][0] for i in tileList]);
-        self.maxX = max([i[0][0] for i in tileList]);
-        self.minY = min([i[0][1] for i in tileList]);
-        self.maxY = max([i[0][1] for i in tileList]);
+        self.minX = min([i[0][0] for i in tile_list]);
+        self.maxX = max([i[0][0] for i in tile_list]);
+        self.minY = min([i[0][1] for i in tile_list]);
+        self.maxY = max([i[0][1] for i in tile_list]);
         
         self.width = self.maxX - self.minX + 1;
         self.height = self.maxY - self.minY + 1;
         
-        # First, tiles from tileList are added
-        self.tileList = [[0] * self.width for i in range(self.height)];
-        for spot in tileList:
+        # First, tiles from tile_list are added
+        self.tile_list = [[0] * self.width for i in range(self.height)];
+        for spot in tile_list:
             location = spot[0];
-            self.tileList[location[1]][location[0]] = Tile(spot[1]);
+            self.tile_list[location[1]][location[0]] = Tile(spot[1]);
         
         # Now, we fill in any still-empty locations with empty tiles.
         for i in range(self.height):
             for j in range(self.width):
-                if self.tileList[i][j] == 0:
-                    self.tileList[i][j] = Tile();
+                if self.tile_list[i][j] == 0:
+                    self.tile_list[i][j] = Tile();
         
-        # Finally, gamePieces are added to tiles.
-        for piece in gamePieceList:
-            currentTile = self.getTile(piece.location);
-            currentTile.addPiece(piece);
+        # Finally, Pieces are added to tiles.
+        for piece in game_piece_list:
+            current_tile = self.get_tile(piece.location);
+            current_tile.add_piece(piece);
             
     def __str__(self):
         # This will output two grids.  The first will display types of Tile objects.  
         # The second will display units and their types where they appear.
         
         # Determine how big to make grid spacing
-        tileSpacing = max([max([len(tile.terrainType) for tile in row]) for row in self.tileList]);
-        unitSpacing = max([max([-1 + sum([len(piece.pieceType) + 1 for piece in tile.occupants]) 
-                                for tile in row]) for row in self.tileList]);
+        tile_spacing = max([max([len(tile.terrain_type) for tile in row]) for row in self.tile_list]);
+        unit_spacing = max([max([-1 + sum([len(piece.piece_type) + 1 for piece in tile.occupants]) 
+                                for tile in row]) for row in self.tile_list]);
 
         result1 = '';
         result2 = '';
-        for row in self.tileList:
+        for row in self.tile_list:
             tilerow = '';
             unitrow = '';
             for tile in row:
-                spaceNeeded = len(tile.terrainType);
-                leftSpace = (tileSpacing - spaceNeeded)//2;
-                rightSpace = tileSpacing - spaceNeeded - leftSpace;
-                tilerow += '|' + leftSpace * ' ' + tile.terrainType + rightSpace * ' ' + '|';
+                space_needed = len(tile.terrain_type);
+                left_space = (tile_spacing - space_needed)//2;
+                right_space = tile_spacing - space_needed - left_space;
+                tilerow += '|' + left_space * ' ' + tile.terrain_type + right_space * ' ' + '|';
                 
-                spaceNeeded = -1 + sum([len(piece.pieceType) + 1 for piece in tile.occupants]);
-                leftSpace = (unitSpacing - spaceNeeded)//2;
-                rightSpace = unitSpacing - spaceNeeded - leftSpace;
-                unitrow += '|' + leftSpace * ' ';
+                space_needed = -1 + sum([len(piece.piece_type) + 1 for piece in tile.occupants]);
+                left_space = (unit_spacing - space_needed)//2;
+                right_space = unit_spacing - space_needed - left_space;
+                unitrow += '|' + left_space * ' ';
                 for piece in tile.occupants:
-                    unitrow += piece.pieceType + ' ';
+                    unitrow += piece.piece_type + ' ';
                 unitrow = unitrow[:-1]
-                unitrow += rightSpace * ' ' + '|';           
+                unitrow += right_space * ' ' + '|';           
             tilerow += '\n';
             unitrow += '\n';
             result1 = tilerow + result1;
@@ -124,20 +124,20 @@ class Board():
         result2 = 'Unit Grid:\n' + result2;
         return result1 + '\n' + result2;
         
-    def getTile(self, location):
+    def get_tile(self, location):
         """
             Outputs the tile at Vector location given by location.
         """
         x = location[0];
         y = location[1];
-        return self.tileList[y - self.minY][x - self.minX]
+        return self.tile_list[y - self.minY][x - self.minX]
         
-    def getTilesByAttribute(self, *kwargs):
+    def get_tiles_by_attribute(self, *kwargs):
         """
             Outputs a list of all tile locations on the board of the type specified.
             
                 kwargs makes up several Tile attributes and values for which we wish to select.
-                    A common example is terrainType
+                    A common example is terrain_type
         """
         if type(kwargs) == dict:
             attributes = list(vars(Tile()).keys());
@@ -149,114 +149,114 @@ class Board():
         for i in range(self.minY, self.maxY + 1):
             for j in range(self.minX, self.maxX + 1):
                 location = v.Vector(i,j);
-                currentTile = self.getTile(location);
-                isGoodTile = True;
+                current_tile = self.get_tile(location);
+                is_good_tile = True;
                 if type(kwargs) == dict:
                     for key, value in kwargs.items():
-                        if not currentTile.key == value:
-                            isGoodTile = False;
-                if isGoodTile:
+                        if not current_tile.key == value:
+                            is_good_tile = False;
+                if is_good_tile:
                     result.append(location);
         return result
     
-    def getPiecesByAttribute(self, *kwargs):
+    def get_pieces_by_attribute(self, *kwargs):
         """
-            Outputs a list of all gamePieces on the board of the type specified.
+            Outputs a list of all game_pieces on the board of the type specified.
             
-                kwargs makes up several GamePiece attributes for which we wish to select.
-                    Common examples are pieceType and team
+                kwargs makes up several Piece attributes for which we wish to select.
+                    Common examples are piece_type and team
         """
         if type(kwargs) == dict:
-            attributes = list(vars(gp.GamePiece(0,0)).keys());
+            attributes = list(vars(gp.Piece(0,0)).keys());
             for key, value in kwargs.items():
                 if key not in attributes:
-                    raise Exception('GamePiece objects do not have the attribute %s' %key + '.')
+                    raise Exception('Piece objects do not have the attribute %s' %key + '.')
                 
         result = [];
         for i in range(self.minY, self.maxY + 1):
             for j in range(self.minX, self.maxX + 1):
                 location = v.Vector(i,j);
-                currentTile = self.getTile(location);
-                for unit in currentTile.occupants:
-                    isGoodUnit = True;
+                current_tile = self.get_tile(location);
+                for unit in current_tile.occupants:
+                    is_good_unit = True;
                     if type(kwargs) == dict:
                         for key, value in kwargs.items():
                             if not unit.key == value:
-                                isGoodUnit = False;
-                    if isGoodUnit:
+                                is_good_unit = False;
+                    if is_good_unit:
                         result.append(unit);
         return result
  
-    def determineImpassable(self, impassableTypes):
+    def determine_impassable(self, impassable_types):
         """
             Outputs a list of all tiles on the board corresponding to all of the impassable types of tiles.
             Different definitions of impassable are required for different types of actions in the game.
             
-                impassableTypes is a list of strings, each corresponding to a terrain type of a Tile.
+                impassable_types is a list of strings, each corresponding to a terrain type of a Tile.
         """
         result = [];
-        for terrain in impassableTypes:
-            result.append(self.getTilesByType(terrain));
+        for terrain in impassable_types:
+            result.append(self.get_tiles_by_attribute(terrain));
         return result
  
-    def addPiece(self, gamePiece):
+    def add_piece(self, game_piece):
         """
             Add the selected piece to the board.
             
-                gamePiece is a GamePiece object.  
+                game_piece is a Piece object.  
                     Notably, it contains the desired location as an attribute.
         """    
-        tile = self.getTile(gamePiece.location);
+        tile = self.get_tile(game_piece.location);
         for unit in tile.occupants:
-            if unit.occupiesSquare:
+            if unit.occupies_square:
                 raise Exception("This square is already full.")
-        tile.addPiece(gamePiece)
+        tile.add_piece(game_piece)
  
-    def removePiece(self, gamePiece):
+    def remove_piece(self, game_piece):
         """
             Removes the selected piece from the board.
             
-                gamePiece is a GamePiece object.  
+                game_piece is a Piece object.  
                     Notably, it contains its current location as an attribute.
         """
-        tile = self.getTile(gamePiece.location);
-        tile.removePiece(gamePiece)
+        tile = self.get_tile(game_piece.location);
+        tile.remove_piece(game_piece)
     
-    def movePiece(self, gamePiece, newLocation, impassableSquares):
+    def move_piece(self, game_piece, new_location, impassable_squares):
         """
-            Moves the selected gamePiece from its current location to the specified new location.
+            Moves the selected game_piece from its current location to the specified new location.
             
-                gamePiece is a GamePiece object.  
+                game_piece is a Piece object.  
                     Notably, it contains its current location as an attribute.
-                newLocation is a Vector representing the new location of gamePiece.
-                impassableSquares is a list of Vector locations representing which tiles pieces may not cross.
+                new_location is a Vector representing the new location of game_piece.
+                impassable_squares is a list of Vector locations representing which tiles pieces may not cross.
             
             This will throw an exception if the move is not valid, given the impassable terrain 
                 and based on whether or not the unit has already moved.
         """
-        self.removePiece(gamePiece);
+        self.remove_piece(game_piece);
         try:
-            gamePiece.move(newLocation, impassableSquares);
+            game_piece.move(new_location, impassable_squares);
         except Exception as error:
             print(error)
-        self.addPiece(gamePiece)
+        self.add_piece(game_piece)
         
-    def refreshPieces(self, *kwargs):
+    def refresh_pieces(self, *kwargs):
         """
             Takes all pieces with specified attributes and alters their movement status
-                so piece.hasMoved = False, enabling them to move again
+                so piece.has_moved = False, enabling them to move again
                 
-                kwargs makes up several GamePiece attributes for which we wish to select.
+                kwargs makes up several Piece attributes for which we wish to select.
         """
-        pieces = self.getPiecesByAttribute(kwargs);
+        pieces = self.get_pieces_by_attribute(kwargs);
         print(pieces)
         for piece in pieces:
-            piece.refreshMovement();
+            piece.refresh_movement();
         
 # Some sample variables for testing purposes
-tileList1 = [(v.Vector(0,0),'A'),(v.Vector(0,1), 'B'),(v.Vector(1,1),'C')]
-gamePieceList1 = [gp.Infantry(1,1,'b'), gp.Cavalry(0,1,'b'),gp.Arsenal(0,0,'w'), gp.SwiftArtillery(0,0,'w')]
-board1 = Board(tileList1,gamePieceList1);
+tile_list1 = [(v.Vector(0,0),'A'),(v.Vector(0,1), 'B'),(v.Vector(1,1),'C')]
+game_piece_list1 = [gp.Infantry(1,1,'b'), gp.Cavalry(0,1,'b'),gp.Arsenal(0,0,'w'), gp.SwiftArtillery(0,0,'w')]
+board1 = Board(tile_list1,game_piece_list1);
         
         
         

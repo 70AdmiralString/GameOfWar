@@ -1,26 +1,26 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-def vecRemove(pointList, point):
+def vec_remove(point_list, point):
     '''
-        Outputs pointList, except with all entries equal to point removed.
+        Outputs point_list, except with all entries equal to point removed.
             
-            pointList is a list of vectors
+            point_list is a list of vectors
             point is a single vector
     '''
-    indices = [i for i in range(len(pointList)) if pointList[i] != point];
-    result = [pointList[i] for i in indices];
+    indices = [i for i in range(len(point_list)) if point_list[i] != point]
+    result = [point_list[i] for i in indices]
     return result
     
-def vecRemoveList(pointList1, pointList2):
+def vec_remove_list(point_list1, point_list2):
     '''
-        Outputs pointList1, except with all entries which appear in pointList2 removed.
+        Outputs point_list1, except with all entries which appear in point_list2 removed.
             
-            pointList1 and pointList2 are both lists of vectors.
+            point_list1 and point_list2 are both lists of vectors.
     '''
-    for point in pointList2:
-        pointList1 = vecRemove(pointList1, point);
-    return pointList1
+    for point in point_list2:
+        point_list1 = vec_remove(point_list1, point)
+    return point_list1
 
 class Vector(object):
     def __init__(self, *args):
@@ -31,7 +31,7 @@ class Vector(object):
         if len(args)==0: self.values = (0,0)
         else: self.values = args
         
-    def normSq(self):
+    def norm_sq(self):
         """ 
             Returns the norm squared (length, magnitude) of the vector 
         """
@@ -105,7 +105,7 @@ class Vector(object):
         if type(other) != type(self):
             return False
         difference = self - other;
-        return difference.normSq() == 0
+        return difference.norm_sq() == 0
     
     def __ne__(self, other):
         """
