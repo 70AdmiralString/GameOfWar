@@ -4,9 +4,9 @@
 This version of the game will be the bare minimum needed for testing later features
 -  Entirely in python
 - 2 players but on 1 computer
--  Minimal image rendering
+- Minimal image rendering
 - User inputs is handled by text and key entries
-- 
+- Mainly used for debugging
 
 ## Version 1.0 Check List
 - [ ] Finish the Game Engine
